@@ -1,0 +1,68 @@
+<resources>
+    <string name="app_name">My Application</string>
+
+    <string name="product_name_nike">Nike Air Force</string>
+    <string name="product_category_nike">Womens shoes</string>
+    <string name="product_price_nike">LKR 33,000</string>
+
+    <string name="product_name_nike11">Nike Air More Uptempo</string>
+    <string name="product_category_nike11">Mens shoes</string>
+    <string name="product_price_nike11">LKR 35,000</string>
+
+
+    <string name="product_name_adidas">Adidas Ultraboost</string>
+    <string name="product_category_adidas">Mens shoes</string>
+    <string name="product_price_adidas">LKR 42,000</string>
+
+    <string name="product_name_adidas1">Adidas All Star</string>
+    <string name="product_category_adidas1">Mens shoes</string>
+    <string name="product_price_adidas1">LKR 42,000</string>
+
+    <string name="product_name_puma">Puma RS-X</string>
+    <string name="product_category_puma">Unisex shoes</string>
+    <string name="product_price_puma">LKR 28,000</string>
+
+
+    <string name="product_name_nike1">Nike Dunk Low</string>
+    <string name="product_category_nike1">Womens shoes</string>
+    <string name="product_price_nike1">LKR 20,000</string>
+
+    <string name="product_name_nike2">Nike SB Force</string>
+    <string name="product_category_nike2">Mens shoes</string>
+    <string name="product_price_nike2">LKR 15,000</string>
+
+    <string name="product_name_nike3">Nike React Infinity</string>
+    <string name="product_category_nike3">Unisex shoes</string>
+    <string name="product_price_nike3">LKR 33,000</string>
+
+    <string name="product_name_nike4">Nike Air Jordan</string>
+    <string name="product_category_nike4">Mens shoes</string>
+    <string name="product_price_nike4">LKR 30,000</string>
+
+    <string name="product_name_nike5">Nike Air Max</string>
+    <string name="product_category_nike5">Mens shoes</string>
+    <string name="product_price_nike5">LKR 25,000</string>
+
+    <string name="product_name_adidas0">Adidas Ultraboost</string>
+    <string name="product_category_adidas0">Mens shoes</string>
+    <string name="product_price_adidas0">LKR 35,000</string>
+
+    <string name="product_name_adidas2">Adidas Superstar</string>
+    <string name="product_category_adidas2">Womens shoes</string>
+    <string name="product_price_adidas2">LKR 30,000</string>
+
+    <string name="product_name_adidas3">Adidas Yeezy Boost</string>
+    <string name="product_category_adidas3">Mens shoes</string>
+    <string name="product_price_adidas3">LKR 20,000</string>
+
+    <string name="product_name_adidas4">Adidas Stan Smith</string>
+    <string name="product_category_adidas4">Unisex shoes</string>
+    <string name="product_price_adidas4">LKR 28,000</string>
+
+    <string name="product_name_adidas5">Adidas Gazelle</string>
+    <string name="product_category_adidas5">Womens shoes</string>
+    <string name="product_price_adidas5">LKR 27,000</string>
+
+
+
+</resources>

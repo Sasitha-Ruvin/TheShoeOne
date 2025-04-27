@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "532280673189",
+    "project_id": "theshoeone-d37b8",
+    "storage_bucket": "theshoeone-d37b8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:532280673189:android:73851062a861ac7a9fde4c",
+        "android_client_info": {
+          "package_name": "com.example.myapplication"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC3hKfUfOSdHQiaqWToo8tKY1I9aZ33s1w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
