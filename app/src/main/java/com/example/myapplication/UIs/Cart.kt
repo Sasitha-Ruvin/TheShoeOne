@@ -14,7 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -24,6 +25,9 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,12 +38,32 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.myapplication.Navigation.Navbar
 import com.example.myapplication.Network.ConnectivityStatusBanner
 import com.example.myapplication.R
+import com.example.myapplication.ViewModels.CartViewModel
+import com.example.myapplication.models.CartItem
+import java.text.NumberFormat
+import java.util.Locale
 
 @Composable
-fun Cart(navController: NavController) {
+fun Cart(
+    navController: NavController,
+    cartViewModel: CartViewModel
+) {
+    // Get the cart items
+    val items = remember { cartViewModel.cartItems }
+
+    // Recalculate subtotal/shipping/total whenever items change
+    val subtotal = remember(items) { cartViewModel.getSubtotal() }
+    val shipping = remember(items) { cartViewModel.getShippingCost() }
+    val total = remember(items) { cartViewModel.getTotal() }
+
+    val currencyFormat = NumberFormat.getCurrencyInstance(Locale("en", "LK")).apply {
+        maximumFractionDigits = 0
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -48,22 +72,22 @@ fun Cart(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 56.dp) // Reserve space for the navbar
+                .padding(bottom = 56.dp) // space for navbar
         ) {
             // Logo
             Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.logo), // Replace with your logo resource
+                    painter = painterResource(id = R.drawable.logo),
                     contentDescription = "Logo",
-                    modifier = Modifier.size(170.dp), // Adjust size as needed
+                    modifier = Modifier.size(170.dp),
                     contentScale = ContentScale.Fit
                 )
             }
+
             ConnectivityStatusBanner()
 
             // Header
@@ -78,115 +102,117 @@ fun Cart(navController: NavController) {
                     .padding(vertical = 16.dp)
             )
 
-
-            // Cart Items
-            CartItem(
-                imageResId = R.drawable.shoe26,
-                name = "Nike Dunk Retro",
-                category = "Women's Shoes",
-                color = "Black and White",
-                size = "UK 9",
-                quantity = "1",
-                price = "LKR 28,000"
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            CartItem(
-                imageResId = R.drawable.shoe32,
-                name = "Adidas Ultraboost",
-                category = "Men's Shoes",
-                color = "White",
-                size = "UK 10",
-                quantity = "2",
-                price = "LKR 32,100"
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Divider(color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f), thickness = 1.dp)
-
-            // Summary
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "Shipping",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontSize = 16.sp
-                )
-                Text(
-                    text = "LKR 1,500",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontSize = 16.sp
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "Sub Total",
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontSize = 18.sp
-                )
-                Text(
-                    text = "LKR 85,500",
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontSize = 18.sp
-                )
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Buttons
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Button(
-                    onClick = { /* Clear action */ },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+            if (items.isEmpty()) {
+                // Empty state
+                Box(
                     modifier = Modifier
-                        .weight(1f)
-                        .height(48.dp)
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "Clear",
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontSize = 16.sp
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "Your cart is empty",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Add some items to your cart",
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = { navController.navigate("home") },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Text(text = "Continue Shopping")
+                        }
+                    }
                 }
-                Spacer(modifier = Modifier.width(16.dp))
-                Button(
-                    onClick = { navController.navigate("checkout") },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+            } else {
+                // List of items
+                LazyColumn(
                     modifier = Modifier
                         .weight(1f)
-                        .height(48.dp)
+                        .padding(horizontal = 16.dp)
                 ) {
-                    Text(
-                        text = "Buy",
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontSize = 16.sp
-                    )
+                    items(items) { item ->
+                        CartItemRow(
+                            cartItem = item,
+                            onRemove = { cartViewModel.removeFromCart(item.id) }
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                }
+
+                // Summary & actions
+                Divider(
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
+                    thickness = 1.dp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    SummaryRow("Shipping", shipping, currencyFormat)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    SummaryRow("Sub Total", subtotal, currencyFormat, bold = true)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    SummaryRow("Total", total, currencyFormat, big = true)
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Button(
+                            onClick = { cartViewModel.clearCart() },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp)
+                        ) {
+                            Text(
+                                text = "Clear",
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontSize = 16.sp
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Button(
+                            onClick = { navController.navigate("checkout") },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp)
+                        ) {
+                            Text(
+                                text = "Buy",
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontSize = 16.sp
+                            )
+                        }
+                    }
                 }
             }
         }
+
+        // Bottom navbar
         Box(
             modifier = Modifier
-                .align(Alignment.BottomCenter) // Position at the bottom
+                .align(Alignment.BottomCenter)
                 .fillMaxWidth()
         ) {
             Navbar(navController = navController)
@@ -195,20 +221,55 @@ fun Cart(navController: NavController) {
 }
 
 @Composable
-fun CartItem(
-    imageResId: Int,
-    name: String,
-    category: String,
-    color: String,
-    size: String,
-    quantity: String,
-    price: String
+private fun SummaryRow(
+    label: String,
+    amount: Double,
+    currencyFormat: NumberFormat,
+    bold: Boolean = false,
+    big: Boolean = false
+) {
+    val style = when {
+        big -> MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+        bold -> MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+        else -> MaterialTheme.typography.bodyMedium
+    }
+    val fontSize = when {
+        big -> 20.sp
+        bold -> 18.sp
+        else -> 16.sp
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            style = style,
+            fontSize = fontSize,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        Text(
+            text = currencyFormat.format(amount),
+            style = style,
+            fontSize = fontSize,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+    }
+}
+
+@Composable
+fun CartItemRow(
+    cartItem: CartItem,
+    onRemove: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(140.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primary
+        ),
         shape = RoundedCornerShape(12.dp)
     ) {
         Row(
@@ -216,18 +277,32 @@ fun CartItem(
                 .fillMaxSize()
                 .padding(12.dp)
         ) {
-            // Product Image
-            Image(
-                painter = painterResource(id = imageResId),
-                contentDescription = null,
+            // Image
+            Box(
                 modifier = Modifier
                     .size(100.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
-            )
+                    .clip(RoundedCornerShape(8.dp))
+            ) {
+                if (cartItem.isFromApi && cartItem.imageUrl != null) {
+                    AsyncImage(
+                        model = cartItem.imageUrl,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else if (cartItem.imageResId != null) {
+                    Image(
+                        painter = painterResource(id = cartItem.imageResId),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Product Details
+            // Details
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -236,63 +311,55 @@ fun CartItem(
             ) {
                 Column {
                     Text(
-                        text = name,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                        text = cartItem.name,
+                        fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         maxLines = 1,
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                     Text(
-                        text = category,
-                        style = MaterialTheme.typography.bodySmall,
+                        text = cartItem.category,
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Color: $color",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                    Text(
-                        text = "Size: $size",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                    Text(
-                        text = "Qty: $quantity",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
+                    Text("Color: ${cartItem.color}", fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onPrimary)
+                    Text("Size: ${cartItem.size}", fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onPrimary)
+                    Text("Qty: ${cartItem.quantity}", fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onPrimary)
                 }
             }
 
-            // Price & Remove Button
+            // Price & remove
             Column(
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Button(
-                    onClick = { /* Remove item action */ },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface),
+                    onClick = onRemove,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
                     shape = RoundedCornerShape(5.dp),
                     modifier = Modifier
-                        .width(100.dp) // Adjust width to match the look in the image
+                        .width(100.dp)
                         .height(30.dp)
                 ) {
                     Text(
                         text = "Remove",
-                        color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.bodySmall,
-                        textAlign = TextAlign.Center
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
+
+                val priceFormat = NumberFormat.getCurrencyInstance(Locale("en", "LK"))
+                    .apply { maximumFractionDigits = 0 }
+
                 Text(
-                    text = price,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                    text = priceFormat.format(cartItem.price),
+                    fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     textAlign = TextAlign.Right,
                     color = MaterialTheme.colorScheme.onPrimary

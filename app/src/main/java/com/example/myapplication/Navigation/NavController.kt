@@ -17,9 +17,11 @@ import com.example.myapplication.UIs.ProfileScreen
 import com.example.myapplication.UIs.SignUp
 import com.example.myapplication.UIs.getStarted
 import com.example.myapplication.ViewModels.AuthViewModel
+import com.example.myapplication.ViewModels.CartViewModel
+
 
 @Composable
-fun Navigation(modifier: Modifier = Modifier, authViewModel: AuthViewModel){
+fun Navigation(modifier: Modifier = Modifier, authViewModel: AuthViewModel, cartViewModel: CartViewModel){
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = "getstarted", builder = {
         composable("getstarted"){
@@ -35,13 +37,13 @@ fun Navigation(modifier: Modifier = Modifier, authViewModel: AuthViewModel){
             Home(navController, authViewModel);
         }
         composable("cart"){
-            Cart(navController)
+            Cart(navController, cartViewModel)
         }
         composable("checkout"){
-            Checkout(navController)
+            Checkout(navController, cartViewModel)
         }
         composable("profile"){
-            ProfileScreen(navController,authViewModel)
+            ProfileScreen(navController, authViewModel)
         }
         composable("products"){
             ProductsScreen(navController)
@@ -52,7 +54,7 @@ fun Navigation(modifier: Modifier = Modifier, authViewModel: AuthViewModel){
                 ?: DataSource().loadNike().find { it.imagesResourceId == imageResourceId }
 
             product?.let {
-                MasterView(product = it, navController = navController)
+                MasterView(product = it, navController = navController, cartViewModel = cartViewModel)
             }
         }
         
@@ -68,7 +70,8 @@ fun Navigation(modifier: Modifier = Modifier, authViewModel: AuthViewModel){
                 navController = navController,
                 productName = productName,
                 imageUrl = imageUrl,
-                price = price
+                price = price,
+                cartViewModel = cartViewModel
             )
         }
     })

@@ -64,14 +64,17 @@ import androidx.navigation.NavController
 import com.example.myapplication.Navigation.Navbar
 import com.example.myapplication.Network.ConnectivityStatusBanner
 import com.example.myapplication.R
+import com.example.myapplication.ViewModels.CartViewModel
+
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.delay
 import java.util.Locale
+import java.text.NumberFormat
 
 @SuppressLint("MissingPermission")
 @Composable
-fun Checkout(navController: NavController) {
+fun Checkout(navController: NavController, cartViewModel: CartViewModel) {
     // Animation
     var offsetX by remember { mutableStateOf(1000.dp) }
     val animatedOffsetX by animateDpAsState(
@@ -86,6 +89,15 @@ fun Checkout(navController: NavController) {
     
     // Context
     val context = LocalContext.current
+    
+    // Cart details
+    val cartItems = cartViewModel.cartItems
+    val subtotal = remember { cartViewModel.getSubtotal() }
+    val shipping = remember { cartViewModel.getShippingCost() }
+    val total = remember { cartViewModel.getTotal() }
+    
+    val currencyFormat = NumberFormat.getCurrencyInstance(Locale("en", "LK"))
+    currencyFormat.maximumFractionDigits = 0
     
     // Location client
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
@@ -270,55 +282,78 @@ fun Checkout(navController: NavController) {
                 ) {
                     Text(
                         text = "Order Summary",
-                        fontSize = 20.sp,
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.padding(bottom = 16.dp)
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("Subtotal", color = MaterialTheme.colorScheme.onPrimary, fontSize = 16.sp)
-                        Text("LKR 85,500", color = MaterialTheme.colorScheme.onPrimary, fontSize = 16.sp)
-                    }
+                    Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
                     
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("Shipping", color = MaterialTheme.colorScheme.onPrimary, fontSize = 16.sp)
-                        Text("LKR 1,500", color = MaterialTheme.colorScheme.onPrimary, fontSize = 16.sp)
-                    }
-                    
-                    Divider(
-                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f),
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                    
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
+                    if (cartItems.isEmpty()) {
                         Text(
-                            "Total", 
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp
+                            text = "Your cart is empty",
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
                         )
-                        Text(
-                            "LKR 87,000", 
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp
-                        )
+                    } else {
+                        // Item count
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Items (${cartItems.size})",
+                                fontSize = 16.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = currencyFormat.format(subtotal),
+                                fontSize = 16.sp,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                        
+                        // Shipping
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Shipping",
+                                fontSize = 16.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = currencyFormat.format(shipping),
+                                fontSize = 16.sp,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                        
+                        Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+                        
+                        // Total
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Total",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = currencyFormat.format(total),
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 }
             }
@@ -326,18 +361,32 @@ fun Checkout(navController: NavController) {
             // Place Order Button
             Button(
                 onClick = {
-                    if (name.isBlank()) {
-                        Toast.makeText(context, "Please enter your name", Toast.LENGTH_SHORT).show()
-                    } else {
+                    if (name.isNotBlank() && address.isNotBlank() && cartItems.isNotEmpty()) {
+                        // Process the order
                         orderPlaced = true
+                        // Clear cart after successful order
+                        cartViewModel.clearCart()
+                        
+                        // Show success toast
                         Toast.makeText(
                             context,
-                            "Thank you for your order, $name! Your shoes will be delivered soon.",
+                            "Order placed successfully!",
                             Toast.LENGTH_LONG
                         ).show()
+                    } else {
+                        // Show error toast
+                        val message = when {
+                            name.isBlank() -> "Please enter your name"
+                            address.isBlank() -> "Please enter your address"
+                            cartItems.isEmpty() -> "Your cart is empty"
+                            else -> "Please fill in all fields"
+                        }
                         
-                        // Navigate back to home after order
-                        navController.navigate("home")
+                        Toast.makeText(
+                            context,
+                            message,
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
@@ -424,5 +473,13 @@ private fun getLocation(
             }
     } else {
         onAddressReceived("Location permission not granted")
+    }
+}
+
+// Function to navigate to home with delay
+private suspend fun homeNavigationWithDelay(navController: NavController) {
+    delay(2000) // 2 second delay
+    navController.navigate("home") {
+        popUpTo("home") { inclusive = true }
     }
 } 

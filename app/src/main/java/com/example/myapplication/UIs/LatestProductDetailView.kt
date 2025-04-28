@@ -35,6 +35,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,6 +54,8 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.myapplication.Navigation.Navbar
 import com.example.myapplication.Network.ConnectivityStatusBanner
+import com.example.myapplication.ViewModels.CartViewModel
+import kotlinx.coroutines.delay
 import java.net.URLDecoder
 
 @Composable
@@ -60,7 +63,8 @@ fun LatestProductDetailView(
     navController: NavController,
     productName: String,
     imageUrl: String,
-    price: String
+    price: String,
+    cartViewModel: CartViewModel
 ) {
     // Decode URL parameters
     val decodedName = productName.replace("-", " ")
@@ -76,6 +80,17 @@ fun LatestProductDetailView(
         targetValue = if (scrollState.value > 0) 1f else 0f,
         label = "scrollProgress"
     )
+    
+    // State for cart action
+    var showAddedToCartMessage by remember { mutableStateOf(false) }
+    
+    // Hide the message after a delay
+    LaunchedEffect(showAddedToCartMessage) {
+        if (showAddedToCartMessage) {
+            delay(2000) // Hide after 2 seconds
+            showAddedToCartMessage = false
+        }
+    }
     
     Box(
         modifier = Modifier
@@ -287,7 +302,18 @@ fun LatestProductDetailView(
                     
                     // Add to cart button
                     Button(
-                        onClick = { /* Add to cart logic */ },
+                        onClick = { 
+                            cartViewModel.addToCart(
+                                imageUrl = decodedImageUrl,
+                                name = decodedName,
+                                category = "Shoes", // Assuming generic category
+                                size = selectedSize,
+                                quantity = quantity,
+                                price = priceValue,
+                                isFromApi = true
+                            )
+                            showAddedToCartMessage = true
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary
@@ -303,6 +329,42 @@ fun LatestProductDetailView(
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onPrimary
                         )
+                    }
+                    
+                    // Added to cart message
+                    if (showAddedToCartMessage) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.tertiary
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp)
+                            ) {
+                                Text(
+                                    text = "Added to cart!",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onTertiary
+                                )
+                                Button(
+                                    onClick = { navController.navigate("cart") },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.onTertiary
+                                    )
+                                ) {
+                                    Text(
+                                        text = "View Cart",
+                                        color = MaterialTheme.colorScheme.tertiary
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }

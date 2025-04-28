@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.myapplication.Navigation.Navigation
 import com.example.myapplication.ViewModels.AuthViewModel
+import com.example.myapplication.ViewModels.CartViewModel
 import com.example.myapplication.ui.theme.MyApplicationTheme
 
 class MainActivity : ComponentActivity() {
@@ -21,9 +22,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val authViewModel : AuthViewModel by viewModels()
+        val cartViewModel : CartViewModel by viewModels()
         setContent {
             MyApplicationTheme {
-                Navigation(authViewModel = authViewModel);
+                Navigation(authViewModel = authViewModel, cartViewModel = cartViewModel);
             }
         }
     }
